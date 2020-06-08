@@ -1,0 +1,7 @@
+[program:{{app_name}}]
+command=/home/{{app_user}}/gunicorn_start
+user={{app_user}}
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/var/www/logs/{{app_name}}/gunicorn-error.log

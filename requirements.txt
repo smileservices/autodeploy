@@ -1,0 +1,14 @@
+ansible==2.9.9
+bcrypt==3.1.7
+cffi==1.14.0
+chevron==0.13.1
+cryptography==2.9.2
+fabric==2.5.0
+invoke==1.4.1
+Jinja2==2.11.2
+MarkupSafe==1.1.1
+paramiko==2.7.1
+pycparser==2.20
+PyNaCl==1.4.0
+PyYAML==5.3.1
+six==1.15.0

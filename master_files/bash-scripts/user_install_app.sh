@@ -1,0 +1,69 @@
+#!/bin/bash
+FILES_PATH=/home/{{superuser}}/{{app_name}}
+APP_REPO={{app_repo}}
+APP_USER={{app_user}}
+APP_NAME={{app_name}}
+APP_SERVICE_NAME={{systemd_service}}
+APP_USER_PATH=/home/$APP_USER
+APP_ROOT_PATH=$APP_USER_PATH/{{app_name}}
+APP_MANAGE_PATH=$APP_ROOT_PATH/app
+PYTHON_PATH=$APP_USER_PATH/venv/bin/python
+PIP_PATH=$APP_USER_PATH/venv/bin/pip
+
+# files paths
+FILE_ENV=$FILES_PATH/{{env_file}}
+FILE_GUNICORN=$FILES_PATH/{{gunicorn_start}}
+FILE_NGINX=$FILES_PATH/{{nginx_conf}}
+FILE_SYSTEMD=$FILES_PATH/{{systemd_service}}
+# files destinations
+FILE_ENV_DEST=$APP_ROOT_PATH/{{env_file}}
+FILE_GUNICORN_DEST=$APP_USER_PATH/{{gunicorn_start}}
+FILE_NGINX_DEST=/etc/nginx/sites-available/{{nginx_conf}}
+FILE_SYSTEMD_DEST=/etc/systemd/system/{{systemd_service}}
+
+cd $APP_USER_PATH
+su -c "git clone $APP_REPO" -m $APP_USER
+echo "=========== done =========="
+
+echo "set up venv"
+su -c "virtualenv venv" -m $APP_USER
+echo "=========== done =========="
+
+cd $APP_ROOT_PATH
+echo "install pip from requirements.txt"
+su -c "$PIP_PATH install -r requirements.txt" -m $APP_USER
+su -c "$PIP_PATH install gunicorn" -m $APP_USER
+echo "=========== done =========="
+
+chmod +x $FILE_GUNICORN
+mv $FILE_ENV $FILE_ENV_DEST
+mv $FILE_GUNICORN $FILE_GUNICORN_DEST
+mv $FILE_NGINX $FILE_NGINX_DEST
+mv $FILE_SYSTEMD $FILE_SYSTEMD_DEST
+
+{% if db_type == "postgres" %}
+su - postgres <<-'EOF'
+        createuser {{app_user}}
+        createdb {{app_user}} --owner {{app_user}}
+        psql -c "ALTER USER {{app_user}} WITH PASSWORD '{{db_pass}}'"
+EOF
+su -c "$PIP_PATH install psycopg2" -m $APP_USER
+{% endif %}
+
+
+cd $APP_MANAGE_PATH
+echo "doing django commands"
+su -c "$PYTHON_PATH manage.py migrate" -m $APP_USER
+su -c "$PYTHON_PATH manage.py collectstatic" -m $APP_USER
+echo "=========== all done =========="
+
+mkdir /var/www/logs/$APP_NAME
+touch /var/www/logs/$APP_NAME/gunicorn-error.log
+ln -s /etc/nginx/sites-available/{{nginx_conf}} /etc/nginx/sites-enabled/{{nginx_conf}}
+
+echo "start and enabling $APP_NAME service"
+systemctl daemon-reload
+systemctl enable $APP_SERVICE_NAME
+systemctl start $APP_SERVICE_NAME
+nginx -t
+systemctl restart nginx
