@@ -1,5 +1,5 @@
 from fabric_server_setup import setup_server
-from fabric_deploy import run_deployment
+from fabric_deploy import setup_scripts, execute_setup_script, put_files_on_server, create_app_user
 from utils import get_django_secret_key
 import argparse
 import json
@@ -63,4 +63,10 @@ if __name__ == '__main__':
     # deploy app
         app_config = json.load(open(os.path.realpath(args.app)))
         app_config['secret_key'] = get_django_secret_key()
-        run_deployment(server_config, app_config)
+        files = setup_scripts(server_config, app_config)
+        do_next = input(f'Setup scripts have been prepared. Press y to upload them and execute or n to cancel?')
+        if do_next == 'y':
+            create_app_user(server_config, app_config)
+            put_files_on_server(server_config, app_config, files)
+            execute_setup_script(server_config, app_config, files)
+        print('Finished...')

@@ -22,7 +22,7 @@ FILE_NGINX_DEST=/etc/nginx/sites-available/{{nginx_conf}}
 FILE_SYSTEMD_DEST=/etc/systemd/system/{{systemd_service}}
 
 cd $APP_USER_PATH
-su -c "git clone $APP_REPO" -m $APP_USER
+su -c "git clone $APP_REPO $APP_ROOT_PATH" -m $APP_USER
 echo "=========== done =========="
 
 echo "set up venv"
@@ -36,10 +36,10 @@ su -c "$PIP_PATH install gunicorn" -m $APP_USER
 echo "=========== done =========="
 
 chmod +x $FILE_GUNICORN
-mv $FILE_ENV $FILE_ENV_DEST
-mv $FILE_GUNICORN $FILE_GUNICORN_DEST
-mv $FILE_NGINX $FILE_NGINX_DEST
-mv $FILE_SYSTEMD $FILE_SYSTEMD_DEST
+cp $FILE_ENV $FILE_ENV_DEST
+cp $FILE_GUNICORN $FILE_GUNICORN_DEST
+cp $FILE_NGINX $FILE_NGINX_DEST
+cp $FILE_SYSTEMD $FILE_SYSTEMD_DEST
 
 {% if db_type == "postgres" %}
 su - postgres <<-'EOF'
@@ -66,4 +66,3 @@ systemctl daemon-reload
 systemctl enable $APP_SERVICE_NAME
 systemctl start $APP_SERVICE_NAME
 nginx -t
-systemctl restart nginx

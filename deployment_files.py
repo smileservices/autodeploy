@@ -34,7 +34,7 @@ def make_server_setup_script(config, location_path):
     return os.path.realpath(file_name), file_name
 
 
-def make_app_deployment_files(app_config, server_config, location_path):
+def make_app_deployment_files(app_config, server_config, location_path, files):
     config_dict = {
         'superuser': server_config['user'],
         'app_name': app_config['name'],
@@ -47,22 +47,11 @@ def make_app_deployment_files(app_config, server_config, location_path):
         'db_pass': secrets.token_urlsafe(16)
     }
 
+    if os.path.exists(location_path):
+        do_next = input(f'The path for deployment files already exists at {location_path}.\nExisting files: {os.listdir(location_path)}\n Overwrite (y) or use the existing ones (n)?')
+        if do_next == 'n':
+            return False
     os.chdir(location_path)
-    files = {
-        # paths
-        'gunicorn_start_path': os.path.join(location_path, 'gunicorn_start'),
-        'nginx_conf_path': os.path.join(location_path, f'{config_dict["app_name"]}'),
-        'systemd_service_path': os.path.join(location_path, f'{config_dict["app_name"]}.service'),
-        'env_file_path': os.path.join(location_path, '.env'),
-        'user_install_app_script_path': os.path.join(location_path, 'user_install_app.sh'),
-        # file names
-        'gunicorn_start': 'gunicorn_start',
-        'nginx_conf': f'{config_dict["app_name"]}',
-        'systemd_service': f'{config_dict["app_name"]}.service',
-        'env_file': '.env',
-        'user_install_app_script': 'user_install_app.sh'
-    }
-
     config_dict['files'] = files
 
     with open(os.path.join(MASTER_FILES_PATH, "gunicorn_start.template"), "r") as f:
@@ -80,7 +69,7 @@ def make_app_deployment_files(app_config, server_config, location_path):
         with open(files['systemd_service'], 'w') as systemdf:
             systemdf.write(rendered)
 
-    with open('.env', 'w') as envfile:
+    with open(files['env_file_path'], 'w') as envfile:
         db_url = False
         if app_config["db_type"] == 'postgres':
             app_config['db'] = {
@@ -103,10 +92,13 @@ def make_app_deployment_files(app_config, server_config, location_path):
         envfile.write(f'DB={db_url}')
 
     rendered_script_file = Template(
-        open(os.path.join(MASTER_SCRIPT_FILES_PATH, 'user_install_app.sh'))
-            .read()
-    ).render({**config_dict, **files})
+        open(os.path.join(MASTER_SCRIPT_FILES_PATH, files['user_install_app_script'])).read()).render({**config_dict, **files})
+
+    rendered_cleanup_script = Template(
+        open(os.path.join(MASTER_SCRIPT_FILES_PATH, files['cleanup_script'])).read()).render({**config_dict, **files})
+
     with open(files['user_install_app_script'], 'w') as script_file:
         script_file.write(rendered_script_file)
 
-    return files
+    with open(files['cleanup_script'], 'w') as script_file:
+        script_file.write(rendered_cleanup_script)
