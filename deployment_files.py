@@ -47,7 +47,7 @@ def make_app_deployment_files(app_config, server_config, location_path, files):
         'db_pass': secrets.token_urlsafe(16)
     }
 
-    if os.path.exists(location_path):
+    if os.path.exists(location_path) and os.listdir(location_path):
         do_next = input(f'The path for deployment files already exists at {location_path}.\nExisting files: {os.listdir(location_path)}\n Overwrite (y) or use the existing ones (n)?')
         if do_next == 'n':
             return False

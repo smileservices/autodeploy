@@ -1,5 +1,5 @@
 #!/bin/bash
-FILES_PATH=/home/{{superuser}}/{{app_name}}
+FILES_PATH=/home/{{app_user}}/temp
 APP_REPO={{app_repo}}
 APP_USER={{app_user}}
 APP_NAME={{app_name}}
@@ -7,8 +7,8 @@ APP_SERVICE_NAME={{systemd_service}}
 APP_USER_PATH=/home/$APP_USER
 APP_ROOT_PATH=$APP_USER_PATH/{{app_name}}
 APP_MANAGE_PATH=$APP_ROOT_PATH/app
-PYTHON_PATH=$APP_USER_PATH/venv/bin/python
-PIP_PATH=$APP_USER_PATH/venv/bin/pip
+PYTHON_PATH=$APP_USER_PATH/venv/bin/python3
+PIP_PATH=$APP_USER_PATH/venv/bin/pip3
 
 # files paths
 FILE_ENV=$FILES_PATH/{{env_file}}
@@ -26,7 +26,7 @@ su -c "git clone $APP_REPO $APP_ROOT_PATH" -m $APP_USER
 echo "=========== done =========="
 
 echo "set up venv"
-su -c "virtualenv venv" -m $APP_USER
+su -c "virtualenv venv --python=$(which python3)" -m $APP_USER
 echo "=========== done =========="
 
 cd $APP_ROOT_PATH
@@ -58,7 +58,8 @@ su -c "$PYTHON_PATH manage.py collectstatic" -m $APP_USER
 echo "=========== all done =========="
 
 mkdir /var/www/logs/$APP_NAME
-touch /var/www/logs/$APP_NAME/gunicorn-error.log
+touch /var/www/logs/$APP_NAME/error.log
+touch /var/www/logs/$APP_NAME/access.log
 ln -s /etc/nginx/sites-available/{{nginx_conf}} /etc/nginx/sites-enabled/{{nginx_conf}}
 
 echo "start and enabling $APP_NAME service"

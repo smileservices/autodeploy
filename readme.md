@@ -70,7 +70,13 @@ What the deploy app script does:
 If you start a project from scratch, use the project at [djangotemplatescripts](https://github.com/smileservices/djangotemplatescripts) to generate the required structure and bootstrap the new app. 
 So far the structure of the apps that the script works with is fixed to this:
 ```
-settings file:          app_root/{appname}/app/settings.py
-manage file:            app_root/{appname}/manage.py
-requirements file:      app_root/requirements.txt
+settings file:          {appname}/app/app/settings.py
+manage file:            {appname}/app/manage.py
+requirements file:      {appname}/requirements.txt
 ```
+### Logging
+The logs of the app reside in /var/www/logs/{{app_name}} folder. There should the logs from django app stay. 
+Gunicorn is setup so it saves error.log and access.log files there. Set up django logging to use the console handler
+so that gunicorn can handle all logging output. 
+! Note for django management commands:
+- use a file handler to output logs in the same logging folder

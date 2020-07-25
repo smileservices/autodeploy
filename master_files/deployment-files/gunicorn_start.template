@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME="{{app_name}}"
+NAME={{app_name}}
 DIR=/home/{{app_user}}/{{app_dir}}/app
 ENV_DIR=/home/{{app_user}}/venv
 USER={{app_user}}
@@ -9,7 +9,9 @@ WORKERS=3
 BIND=unix:/home/{{app_user}}/gunicorn.sock
 DJANGO_SETTINGS_MODULE=app.settings
 DJANGO_WSGI_MODULE=app.wsgi
-LOG_LEVEL=error
+LOG_LEVEL=info
+LOG_FILE_ERROR=/var/www/logs/$APP_NAME/error.log
+LOG_FILE_ACCESS=/var/www/logs/$APP_NAME/access.log
 
 source $ENV_DIR/bin/activate
 cd $DIR
@@ -22,4 +24,5 @@ exec $ENV_DIR/bin/gunicorn ${DJANGO_WSGI_MODULE}:application \
   --group=$GROUP \
   --bind=$BIND \
   --log-level=$LOG_LEVEL \
-  --log-file=-
+  --error-logfile=$LOG_FILE_ERROR \
+  --access-logfile=$LOG_FILE_ACCESS

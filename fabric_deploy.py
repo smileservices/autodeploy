@@ -27,6 +27,8 @@ def create_app_user(server_config, app_config):
     )
     enc_password = crypt.crypt(app_config["user_pass"], '22')
     try:
+        c.sudo(f'deluser {app_config["user"]}', password=server_config["pass"])
+        c.sudo(f'rm -rf /home/{app_config["user"]}', password=server_config["pass"])
         c.sudo(f'useradd -d /home/{app_config["user"]} -p {enc_password} -m {app_config["user"]}',
                password=server_config["pass"])
     except Exception as e:
@@ -43,7 +45,7 @@ def put_files_on_server(server_config, app_config, files):
         }
     )
 
-    temp_app_folder = app_config['name']
+    temp_app_folder = os.path.join(f"/home/{app_config['user']}/temp")
     install_script_path = os.path.join(
         temp_app_folder,
         files['user_install_app_script']
@@ -59,7 +61,7 @@ def put_files_on_server(server_config, app_config, files):
 
     try:
         c.put(files['user_install_app_script_path'], temp_app_folder)
-        c.put(files['cleanup_script'], temp_app_folder)
+        c.put(files['cleanup_script_path'], temp_app_folder)
         c.put(files['env_file_path'], temp_app_folder)
         c.put(files['gunicorn_start_path'], temp_app_folder)
         c.put(files['nginx_conf_path'], temp_app_folder)
@@ -87,7 +89,7 @@ def execute_setup_script(server_config, app_config, files):
             'password': server_config['pass']
         }
     )
-    temp_app_folder = app_config['name']
+    temp_app_folder = os.path.join(f"/home/{app_config['user']}/temp")
     install_script_path = os.path.join(
         temp_app_folder,
         files['user_install_app_script']
@@ -125,6 +127,8 @@ def setup_scripts(server_config, app_config):
         'systemd_service_path': os.path.join(files_location, f'{app_config["name"]}.service'),
         'env_file_path': os.path.join(files_location, '.env'),
         'user_install_app_script_path': os.path.join(files_location, 'user_install_app.sh'),
+        'cleanup_script_path': os.path.join(files_location, 'cleanup_script.sh'),
+
         # file names
         'gunicorn_start': 'gunicorn_start',
         'nginx_conf': f'{app_config["name"]}',
