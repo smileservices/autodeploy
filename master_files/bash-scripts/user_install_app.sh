@@ -22,7 +22,14 @@ FILE_NGINX_DEST=/etc/nginx/sites-available/{{nginx_conf}}
 FILE_SYSTEMD_DEST=/etc/systemd/system/{{systemd_service}}
 
 cd $APP_USER_PATH
-su -c "git clone $APP_REPO $APP_ROOT_PATH" -m $APP_USER
+
+{% if repo_key_path %}
+eval "$(ssh-agent -s)"
+ssh-add $APP_USER_PATH/.ssh/id_rsa
+{% endif %}
+
+git clone $APP_REPO $APP_ROOT_PATH
+chown $APP_USER:$APP_USER $APP_ROOT_PATH -R
 echo "=========== done =========="
 
 echo "set up venv"
@@ -62,8 +69,9 @@ touch /var/www/logs/$APP_NAME/error.log
 touch /var/www/logs/$APP_NAME/access.log
 ln -s /etc/nginx/sites-available/{{nginx_conf}} /etc/nginx/sites-enabled/{{nginx_conf}}
 
-echo "start and enabling $APP_NAME service"
+echo "start and enabling $APP_NAME service..."
 systemctl daemon-reload
 systemctl enable $APP_SERVICE_NAME
 systemctl start $APP_SERVICE_NAME
+echo "Testing nginx configuration file..."
 nginx -t

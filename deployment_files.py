@@ -44,7 +44,7 @@ def make_app_deployment_files(app_config, server_config, location_path, files):
         'app_url': app_config['url'],
         'app_repo': app_config['repo'],
         'db_type': app_config['db_type'],
-        'db_pass': secrets.token_urlsafe(16)
+        'db_pass': app_config['db']['password']
     }
 
     if os.path.exists(location_path) and os.listdir(location_path):
@@ -73,11 +73,11 @@ def make_app_deployment_files(app_config, server_config, location_path, files):
         db_url = False
         if app_config["db_type"] == 'postgres':
             app_config['db'] = {
-                'address': 'localhost',
-                'port': '5432',
-                'name': config_dict['app_user'],
-                'username': config_dict['app_user'],
-                'password': config_dict['db_pass'],
+                'address': app_config['db']['address'],
+                'port': app_config['db']['port'],
+                'name': app_config['db']['name'],
+                'username': app_config['db']['username'],
+                'password': app_config['db']['password'],
             }
             db_url = utils.get_postgresql_url(**app_config['db'])
         if app_config["db_type"] == 'sqlite':

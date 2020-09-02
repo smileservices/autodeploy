@@ -27,9 +27,13 @@ def create_app_user(server_config, app_config):
     )
     enc_password = crypt.crypt(app_config["user_pass"], '22')
     try:
-        c.sudo(f'deluser {app_config["user"]}', password=server_config["pass"])
-        c.sudo(f'rm -rf /home/{app_config["user"]}', password=server_config["pass"])
-        c.sudo(f'useradd -d /home/{app_config["user"]} -p {enc_password} -m {app_config["user"]}',
+        try:
+            # c.sudo(f'sudo pkill -KILL -u {app_config["user"]}', password=server_config["pass"])
+            c.sudo(f'deluser {app_config["user"]}', password=server_config["pass"])
+            c.sudo(f'rm -rf /home/{app_config["user"]}', password=server_config["pass"])
+        except Exception as e:
+            logger.info('User does not exist. Will create')
+            c.sudo(f'useradd -d /home/{app_config["user"]} -p {enc_password} -m {app_config["user"]}',
                password=server_config["pass"])
     except Exception as e:
         logger.error(e)
@@ -69,10 +73,19 @@ def put_files_on_server(server_config, app_config, files):
 
         c.sudo(f'chmod +x {install_script_path}', password=server_config["pass"])
         c.sudo(f'chmod +x {cleanup_script_path}', password=server_config["pass"])
+
+        if 'repo_key_path' in files:
+            # add repo ssh key to user
+            ssh_folder = f"/home/{app_config['user']}/.ssh"
+            c.run(f'mkdir {ssh_folder}')
+            c.put(files['repo_key_path'], os.path.join(ssh_folder, files['repo_key']))
+
     except Exception as e:
         logger.error(e.result.stderr)
         logger.debug(f'Running cleanup script {cleanup_script_path}')
         c.sudo(f'{cleanup_script_path}', password=server_config["pass"])
+        c.sudo(f'deluser {app_config["user"]}', password=server_config["pass"])
+        c.sudo(f'rm -rf /home/{app_config["user"]}', password=server_config["pass"])
         exit()
 
 
@@ -114,7 +127,7 @@ Run the dev script
 '''
 
 
-def setup_scripts(server_config, app_config):
+def setup_scripts(server_config, app_config, repo_key=''):
     logger.debug(
         f'Start the deployment script in {os.getcwd()}: app name is {app_config["name"]} and url {app_config["url"]}')
     # deploy app
@@ -128,6 +141,7 @@ def setup_scripts(server_config, app_config):
         'env_file_path': os.path.join(files_location, '.env'),
         'user_install_app_script_path': os.path.join(files_location, 'user_install_app.sh'),
         'cleanup_script_path': os.path.join(files_location, 'cleanup_script.sh'),
+        'repo_key_path': os.path.join(os.getcwd(), repo_key) if repo_key else False,
 
         # file names
         'gunicorn_start': 'gunicorn_start',
@@ -135,7 +149,8 @@ def setup_scripts(server_config, app_config):
         'systemd_service': f'{app_config["name"]}.service',
         'env_file': '.env',
         'user_install_app_script': 'user_install_app.sh',
-        'cleanup_script': 'cleanup_script.sh'
+        'cleanup_script': 'cleanup_script.sh',
+        'repo_key': 'id_rsa'
     }
 
     try:

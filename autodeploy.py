@@ -50,6 +50,7 @@ if __name__ == '__main__':
     parser.add_argument('type', help="server for server setup from scratch; app for app deployment")
     parser.add_argument('server', help="the json file with server configuration")
     parser.add_argument('--app', help="the json file with app configuration")
+    parser.add_argument('--repo-key', help="private repository key file")
     args = parser.parse_args()
 
     #get config files
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     # deploy app
         app_config = json.load(open(os.path.realpath(args.app)))
         app_config['secret_key'] = get_django_secret_key()
-        files = setup_scripts(server_config, app_config)
+        files = setup_scripts(server_config, app_config, repo_key=args.repo_key)
         do_next = input(f'Setup scripts have been prepared. Press y to upload them and execute or n to cancel?')
         if do_next == 'y':
             create_app_user(server_config, app_config)

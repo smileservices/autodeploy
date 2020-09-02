@@ -21,7 +21,15 @@ FILE_GUNICORN_DEST=$APP_USER_PATH/{{gunicorn_start}}
 FILE_NGINX_DEST=/etc/nginx/sites-available/{{nginx_conf}}
 FILE_SYSTEMD_DEST=/etc/systemd/system/{{systemd_service}}
 
+{% if db_type == "postgres" %}
+su - postgres <<-'EOF'
+        dropdb {{app_user}}
+        dropuser {{app_user}}
+EOF
+{% endif %}
+
 rm /etc/nginx/sites-enabled/{{nginx_conf}}
+rm /etc/nginx/sites-available/{{nginx_conf}}
 rm $FILE_ENV_DEST
 rm $FILE_GUNICORN_DEST
 rm $FILE_NGINX_DEST
