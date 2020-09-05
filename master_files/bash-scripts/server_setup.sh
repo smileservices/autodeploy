@@ -34,5 +34,8 @@ ufw allow https
 ufw --force enable
 ufw --force reset
 
+ssh-keyscan github.com >> ~/.ssh/known_hosts
+ssh-keyscan bitbucket.com >> ~/.ssh/known_hosts
+
 echo "server setup script ok" >> ~/server_setup.log
 systemctl reboot

@@ -14,8 +14,11 @@ def setup_server(config):
     )
 
     setup_script_path, setup_script_name = make_server_setup_script(config, os.getcwd())
-    remote_user_home = f'/home/{config["user"]}'
-    c.run(f'mkdir {remote_user_home}/.ssh')
+    if config["user"] == 'root':
+        remote_user_home = '/root'
+    else:
+        remote_user_home = f'/home/{config["user"]}'
+        c.run(f'mkdir {remote_user_home}/.ssh')
     remote_script_path = os.path.join(remote_user_home, setup_script_name)
     c.put(config['ssh_key'], f'{remote_user_home}/.ssh/authorized_keys')
     c.put(setup_script_path, remote_script_path)
