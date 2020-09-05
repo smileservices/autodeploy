@@ -5,6 +5,7 @@ apt-get update
 apt-get -y upgrade
 apt-get -y install build-essential libpq-dev python-dev
 apt-get -y install nginx
+apt-get -y install certbot python3-certbot-nginx
 apt-get -y install python3-virtualenv
 apt-get -y install python3-pip
 apt-get -y install git
@@ -34,6 +35,7 @@ ufw allow https
 ufw --force enable
 ufw --force reset
 
+# add ssh fingerprints of common repositories
 ssh-keyscan github.com >> ~/.ssh/known_hosts
 ssh-keyscan bitbucket.com >> ~/.ssh/known_hosts
 

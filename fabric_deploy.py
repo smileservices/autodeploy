@@ -33,7 +33,7 @@ def create_app_user(server_config, app_config):
             c.sudo(f'rm -rf /home/{app_config["user"]}', password=server_config["pass"])
         except Exception as e:
             logger.info('User does not exist. Will create')
-            c.sudo(f'useradd -d /home/{app_config["user"]} -p {enc_password} -m {app_config["user"]}',
+        c.sudo(f'useradd -d /home/{app_config["user"]} -p {enc_password} -m {app_config["user"]}',
                password=server_config["pass"])
     except Exception as e:
         logger.error(e)
