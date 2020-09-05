@@ -75,3 +75,6 @@ systemctl enable $APP_SERVICE_NAME
 systemctl start $APP_SERVICE_NAME
 echo "Testing nginx configuration file..."
 nginx -t
+
+# add ssl certificate
+# sudo certbot --nginx -d {{app_url}}

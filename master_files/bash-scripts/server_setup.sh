@@ -33,7 +33,7 @@ ufw allow {% if new_ssh_port %}{{new_ssh_port}}{% else %}{{port}}{% endif %}
 ufw allow http
 ufw allow https
 ufw --force enable
-ufw --force reset
+
 
 # add ssh fingerprints of common repositories
 ssh-keyscan github.com >> ~/.ssh/known_hosts
