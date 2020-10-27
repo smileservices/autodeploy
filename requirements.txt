@@ -2,7 +2,7 @@ ansible==2.9.9
 bcrypt==3.1.7
 cffi==1.14.0
 chevron==0.13.1
-cryptography==2.9.2
+cryptography==3.2
 fabric==2.5.0
 invoke==1.4.1
 Jinja2==2.11.2
